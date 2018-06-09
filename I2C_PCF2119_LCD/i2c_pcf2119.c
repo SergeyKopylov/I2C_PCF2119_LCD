@@ -78,7 +78,7 @@ uint32_t I2C1_PCF2119_read_ddram_char(uint8_t addr, uint8_t row, uint8_t pos){
 	I2C1_SendByte(0x40);  //CO=0, RS=1
 
 	I2C1_Start();
-	I2C1_SendAddr(addr | 0x01); //Адрес addr + бит R/W=1
+	I2C1_SendAddr(addr | 0x01); //d??addr + ? R/W=1
 	I2C1->CR1 &= ~I2C_CR1_ACK;							//NACK
 	while(!(I2C1->SR1 & I2C_SR1_RXNE));
 	I2C1_Stop();
@@ -86,7 +86,7 @@ uint32_t I2C1_PCF2119_read_ddram_char(uint8_t addr, uint8_t row, uint8_t pos){
 }
 
 /**
-* Чтение бита BF (Busy flag). ret=1 -> busy
+* ???? BF (Busy flag). ret=1 -> busy
 */
 uint8_t I2C1_PCF2119_BF_read(uint8_t addr){
 	I2C1_Start();
@@ -95,7 +95,7 @@ uint8_t I2C1_PCF2119_BF_read(uint8_t addr){
 	I2C1_Stop();
 
 	I2C1_Start();
-	I2C1_SendAddr(addr | 0x01); //Адрес addr + бит R/W=1
+	I2C1_SendAddr(addr | 0x01); //d??addr + ? R/W=1
 	I2C1->CR1 &= ~I2C_CR1_ACK;							//NACK
 	while(!(I2C1->SR1 & I2C_SR1_RXNE));
 	I2C1_Stop();
@@ -111,7 +111,7 @@ uint8_t I2C1_PCF2119_AC_read(uint8_t addr){
 	I2C1_Stop();
 
 	I2C1_Start();
-	I2C1_SendAddr(addr | 0x01); //Адрес addr + бит R/W=1
+	I2C1_SendAddr(addr | 0x01); //d??addr + ? R/W=1
 	I2C1->CR1 &= ~I2C_CR1_ACK;							//NACK
 	while(!(I2C1->SR1 & I2C_SR1_RXNE));
 	I2C1_Stop();
@@ -130,8 +130,8 @@ void I2C1_PCF2119_SW_Init(uint8_t addr){
  	I2C1_SendByte(0x08);  // Set to character mode, full display, icon blink disabled
   I2C1_SendByte(0x40);  // Set voltage multiplier to 2
   I2C1_SendByte(0xA5);  // Set Vlcd and store in register VA. VLCD nom = Vx * 0.08 + 1.82. Vx = (3.3-1.82)/0.08 = 19[dec]= 13[hex].
-                        // Но когда я подставил 0x93 - символы вообще не горели. Поэтому экспериментально поставил 0xAA (AA=3.3/0.8)
-                        // также нашёл в даташите на экран инфу: Driving voltage = 4.85V. 4,85-1,82=3,03. 3,03/0,08=37
+                        // ? ?? ?????0x93 - ??? ?? ???. Ю?? ???????????xAA (AA=3.3/0.8)
+                        // ????? ?????????: Driving voltage = 4.85V. 4,85-1,82=3,03. 3,03/0,08=37
                         // 37[dec]=0x25.  0x25+0x80=0xA5
   I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
   I2C1_SendByte(0x0C);  // Display control: set display on, cursor off, no blink
@@ -144,10 +144,10 @@ void I2C1_PCF2119_SW_Init(uint8_t addr){
 
 
 /**
-* По даташиту PCF2119 - курсор-это 5 точек в восьмой линии символа.
-* Но по факту - в экранах GDSC-GR-1602AM-01 нет этой восьмой линии, только символы 5*7,
-* поэтому приходится пользоваться только миганием самого символа.
-* Если нужно будет управлять именно курсором - раскомментировать нужные строки ниже.
+* Ю ????CF2119 - ????? ??? ?? ?????.
+* ? ????????? GDSC-GR-1602AM-01 ? ???? ?? ?????? 5*7,
+* ???? ???????????????????????.
+* ????????????????? ?????? ?? ?????
 **/
 void I2C1_PCF2119_Cursor_switch(uint8_t addr, uint8_t stat){
   if ((stat == 1) || (stat == 0)){
@@ -168,8 +168,7 @@ void I2C1_PCF2119_Cursor_switch(uint8_t addr, uint8_t stat){
 }
 
 
-/// Сдвиг курсора вправо (stat=1) или влево (stat=0) от текущей позиции
-void I2C1_PCF2119_Cursor_shift(uint8_t addr, uint8_t stat){
+/// ?? ??? ?? (stat=1) ? ??(stat=0) ????????void I2C1_PCF2119_Cursor_shift(uint8_t addr, uint8_t stat){
   if ((stat == 1) || (stat == 0)){
     I2C1_Start();
     I2C1_SendAddr(addr);
@@ -213,8 +212,7 @@ void I2C1_PCF2119_contrast(uint8_t addr, uint8_t val){
   I2C1_SendAddr(addr);
   I2C1_SendByte(0x00);
   I2C1_SendByte(0x25);
-  I2C1_SendByte(0x80 | val);  ///255 = максимум
-
+  I2C1_SendByte(0x80 | val);  ///255 = ????
   I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
   I2C1_SendByte(0x0C);  // Display control: set display on, cursor off, no blink
   I2C1_SendByte(0x06);  // Entry mode set, increase DDRAM after access, no shift
@@ -222,9 +220,9 @@ void I2C1_PCF2119_contrast(uint8_t addr, uint8_t val){
   I2C1_Stop();
 }
 
-	/// Очистка экрана.
-	// т.к. на моём дисплее прошит набор символов "R", то стандартный пробел 20h там заменён на другой символ.
-	// Поэтому стандартная функция очистки экрана (I2C1_SendByte(0x01)) тут не работает.
+	/// ?????
+	// ?? ????? ?????????R", ?????? ??? 20h ????????????
+	// Ю?? ????? ??????? ??(I2C1_SendByte(0x01)) ???????.
 void ClearDisplay(uint8_t addr) {
   I2C1_Start();
   I2C1_SendAddr(addr);
@@ -238,7 +236,7 @@ void ClearDisplay(uint8_t addr) {
   I2C1_SendAddr(addr);
   I2C1_SendByte(0x40);
   for (uint8_t q = 0; q <= 127; q++){
-    I2C1_SendByte(160); // Пустой символ
+    I2C1_SendByte(160); // г?? ???
   }
   I2C1_Stop();
 
@@ -253,7 +251,7 @@ void ClearDisplay(uint8_t addr) {
   I2C1_SendAddr(addr);
   I2C1_SendByte(0x40);
   for (uint8_t q = 0; q <= 127; q++){
-    I2C1_SendByte(0); // Обнуляем все символы
+    I2C1_SendByte(0); // ???? ???
   }
   I2C1_Stop();
 

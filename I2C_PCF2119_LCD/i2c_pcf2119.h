@@ -1,4 +1,4 @@
-#ifndef I2C_H
+﻿#ifndef I2C_H
 #define I2C_H
 
 void ClearDisplay(uint8_t addr);
