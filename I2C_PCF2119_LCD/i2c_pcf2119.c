@@ -143,12 +143,77 @@ void I2C1_PCF2119_SW_Init(uint8_t addr){
 }
 
 
+/**
+* По даташиту PCF2119 - курсор-это 5 точек в восьмой линии символа.
+* Но по факту - в экранах GDSC-GR-1602AM-01 нет этой восьмой линии, только символы 5*7,
+* поэтому приходится пользоваться только миганием самого символа.
+* Если нужно будет управлять именно курсором - раскомментировать нужные строки ниже.
+**/
+void I2C1_PCF2119_Cursor_switch(uint8_t addr, uint8_t stat){
+  if ((stat == 1) || (stat == 0)){
+    I2C1_Start();
+    I2C1_SendAddr(addr);
+    I2C1_SendByte(0x00);  // MSB (Continuation bit Co) = 0, more than one byte may follow. Bit6, RS=0, next byte is command byte
+    I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
+    if (stat == 1) {
+      I2C1_SendByte(0x0D);  // Display control: set display on, cursor off, character blink on
+//      I2C1_SendByte(0x0E);  // Display control: set display on, cursor on, character blink off
+//      I2C1_SendByte(0x0F);  // Display control: set display on, cursor on, character blink on
+    }
+    else {
+      I2C1_SendByte(0x0C);  // Display control: set display on, cursor off, no blink
+    }
+    I2C1_Stop();
+  }
+}
+
+
+/// Сдвиг курсора вправо (stat=1) или влево (stat=0) от текущей позиции
+void I2C1_PCF2119_Cursor_shift(uint8_t addr, uint8_t stat){
+  if ((stat == 1) || (stat == 0)){
+    I2C1_Start();
+    I2C1_SendAddr(addr);
+    I2C1_SendByte(0x00);  // MSB (Continuation bit Co) = 0, more than one byte may follow. Bit6, RS=0, next byte is command byte
+    I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
+    if (stat == 1) {
+      I2C1_SendByte(0x14);  // Curs_disp_shift: move cursor, right shift
+    }
+    else {
+      I2C1_SendByte(0x10);  // Curs_disp_shift: move cursor, left shift
+    }
+    I2C1_Stop();
+  }
+}
+
+
+void I2C1_PCF2119_Cursor_set_pos(uint8_t addr, uint8_t row, uint8_t pos){
+
+  uint8_t DDRAM_address = 0;
+  if (row == 1) { DDRAM_address = 1 + pos;}
+  if (row == 2) { DDRAM_address = 0x41 + pos;}
+  DDRAM_address |= (1 << 7);
+
+	I2C1_Start();
+	I2C1_SendAddr(addr);
+	I2C1_SendByte(0x00);
+	I2C1_SendByte(DDRAM_address); //Set_DDRAM address
+	I2C1_Stop();
+
+  I2C1_Start();
+  I2C1_SendAddr(addr);
+  I2C1_SendByte(0x00);  // MSB (Continuation bit Co) = 0, more than one byte may follow. Bit6, RS=0, next byte is command byte
+  I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
+  I2C1_SendByte(0x0D);  // Display control: set display on, cursor off, character blink
+  I2C1_Stop();
+}
+
+
 void I2C1_PCF2119_contrast(uint8_t addr, uint8_t val){
   I2C1_Start();
   I2C1_SendAddr(addr);
   I2C1_SendByte(0x00);
   I2C1_SendByte(0x25);
-  I2C1_SendByte(0x80 | val);
+  I2C1_SendByte(0x80 | val);  ///255 = максимум
 
   I2C1_SendByte(0x24);  // Change from extended instruction set to basic instruction set
   I2C1_SendByte(0x0C);  // Display control: set display on, cursor off, no blink
