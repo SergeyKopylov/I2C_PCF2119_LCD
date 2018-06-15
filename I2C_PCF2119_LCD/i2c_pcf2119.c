@@ -28,6 +28,7 @@ void I2C1_SendByte(uint8_t byte)
 {
    while( !(I2C1->SR1 & I2C_SR1_TXE) );
    I2C1->DR = byte;
+   while( !((I2C1->SR1 & ( I2C_SR1_TXE | I2C_SR1_BTF)) && (I2C1->SR2 & (I2C_SR2_TRA | I2C_SR2_MSL | I2C_SR2_BUSY))) );   /* TRA, BUSY, MSL, TXE and BTF flags */
 }
 
 
